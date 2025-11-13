@@ -1,11 +1,10 @@
 import "./App.css";
 import { useEffect, useState } from "react";
 import { getVideosByOrderId, getVideoTypes } from "./services";
-import { useVideoThumbnails } from "./hooks/useVideoThumbnails";
+// import { useVideoThumbnails } from "./hooks/useVideoThumbnails";
 import SideBar from "./components/SideBar";
 import TopScrollBar from "./components/TopScrollBar";
 import VideoPlayArea from "./components/VideoPlayArea";
-import { videosResponse } from "./mock/videosResponse";
 
 function App() {
   const [videoTypes, setVideoTypes] = useState(null);
@@ -14,14 +13,21 @@ function App() {
   const [selectedVideo, setSelectedVideo] = useState(null);
 
   // Generate thumbnails when videos are fetched
-  const { videosWithThumbnails } = useVideoThumbnails(videosResponse.groups);
+  // const { videosWithThumbnails } = useVideoThumbnails(videos);
 
   useEffect(() => {
     Promise.all([getVideoTypes(), getVideosByOrderId(84)])
       .then(([types, { groups }]) => {
         console.log(types, groups);
         setVideoTypes(types);
-        setVideos(videosResponse.groups);
+        const updatedData = groups.map(group => ({
+          ...group,
+          videos: group.videos.map(video => ({
+            ...video,
+            video_stream_url: 'https://my-video-platform-storage.s3.ap-south-1.amazonaws.com/SSYouTube.online_Zindagi+Tere+Naam+Video+Song+4k+60fps+-+Yodha_1080p.mp4',
+          })),
+        }));
+        setVideos(updatedData);
       })
       .catch((error) => {
         console.error(error);
@@ -37,7 +43,7 @@ function App() {
       />
       <div className="main-content-container">
         <TopScrollBar
-          videos={(videosWithThumbnails || videos)?.filter(video => video.video_type === selectedVideoType) || []}
+          videos={videos?.filter(video => video.video_type === selectedVideoType) || []}
           selectedVideo={selectedVideo}
           setSelectedVideo={setSelectedVideo}
         />

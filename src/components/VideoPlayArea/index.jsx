@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import "./index.scss";
-import { getComments, getLikes, addLike } from "../../services";
+import { addComments, getComments, addLike, getLikes } from "../../services";
 
 function VideoPlayArea({ videoUrl, videoId }) {
   const [comments, setComments] = useState([]);
@@ -68,22 +68,39 @@ function VideoPlayArea({ videoUrl, videoId }) {
     }
   };
 
-  const handleSubmitComment = () => {
-    if (newComment.trim()) {
-      const comment = {
-        id: Date.now(),
-        comment: newComment,
-        comment_time: formatTime(currentTime),
-      };
-      setComments(
-        [...comments, comment].sort((a, b) => {
-          const timeA = timeStringToSeconds(a.comment_time);
-          const timeB = timeStringToSeconds(b.comment_time);
-          return timeA - timeB;
-        })
-      );
-      setNewComment("");
-      setShowCommentModal(false);
+  const handleSubmitComment = async () => {
+    if (newComment.trim() && videoId) {
+      const commentTime = formatTime(currentTime);
+      const commentData = [
+        {
+          comment: newComment,
+          comment_time: commentTime,
+        },
+      ];
+
+      try {
+        const response = await addComments(commentData, videoId);
+
+        // Add the new comment to the list
+        const newCommentObj = response.comment || {
+          id: Date.now(),
+          comment: newComment,
+          comment_time: commentTime,
+        };
+
+        setComments(
+          [...comments, newCommentObj].sort((a, b) => {
+            const timeA = timeStringToSeconds(a.comment_time);
+            const timeB = timeStringToSeconds(b.comment_time);
+            return timeA - timeB;
+          })
+        );
+        setNewComment("");
+        setShowCommentModal(false);
+      } catch (error) {
+        console.error("Error adding comment:", error);
+        // Optionally show an error message to the user
+      }
     }
   };
 
@@ -325,6 +342,13 @@ function VideoPlayArea({ videoUrl, videoId }) {
       // Fetch likes
       getLikes(videoId)
         .then((fetchedLikes) => {
+          //   {
+          //     "id": 10,
+          //     "video_id": 22,
+          //     "like_time": "00:01:02",
+          //     "created_at": "2025-11-12T10:12:00Z",
+          //     "updated_at": "2025-11-12T10:12:00Z"
+          // }
           // Sort likes by time (convert to seconds for sorting)
           const sortedLikes = fetchedLikes.sort((a, b) => {
             const timeA = timeStringToSeconds(a.like_time);
@@ -373,7 +397,6 @@ function VideoPlayArea({ videoUrl, videoId }) {
     };
   }, []);
 
-  console.log(comments, "-------");
   return (
     <div className="video-play-area">
       <div className="video-play-area-main-content">
@@ -559,7 +582,9 @@ function VideoPlayArea({ videoUrl, videoId }) {
               >
                 {isLiking ? "..." : "+ Add Like"}
               </button>
-              {likes.length > 0 && <h3 className="likes-title">Likes ({likes.length})</h3>}
+              {likes.length > 0 && (
+                <h3 className="likes-title">Likes ({likes.length})</h3>
+              )}
             </div>
             <div className="likes-list">
               {likes.map((like) => (

@@ -3,9 +3,8 @@ import './index.scss'
 
 function VideoThumbnail({ video, onSelect, isSelected }) {
   // Use thumbnail from video object if available
-  const thumbnail = video.thumbnail
-  const loading = video.thumbnailLoading !== false
-  const error = video.thumbnailError === true
+  const thumbnail = null
+  const loading = false
 
   return (
     <div 
@@ -14,8 +13,8 @@ function VideoThumbnail({ video, onSelect, isSelected }) {
       title={video.title}
     >
       <div className="thumbnail-container">
-        {loading && !error && <div className="thumbnail-loading">Loading...</div>}
-        {error && !thumbnail && (
+        {loading && <div className="thumbnail-loading">Loading...</div>}
+        {!thumbnail && (
           <div className="thumbnail-placeholder">
             <span className="placeholder-icon">📹</span>
             <span className="placeholder-text">{video.title || 'Video'}</span>
@@ -23,7 +22,7 @@ function VideoThumbnail({ video, onSelect, isSelected }) {
         )}
         {thumbnail ? (
           <img src={thumbnail} alt={video.title} className="thumbnail-image" />
-        ) : !error && loading ? (
+        ) : loading ? (
           <div className="thumbnail-loading">Loading...</div>
         ) : null}
       </div>
